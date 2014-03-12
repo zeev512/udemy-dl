@@ -9,6 +9,7 @@ import re
 import os
 import time
 import urllib
+from BeautifulSoup import BeautifulSoup
 
 class Session:
     headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:18.0) Gecko/20100101 Firefox/18.0',
@@ -27,9 +28,15 @@ class Session:
 
 session = Session()
 
+def get_csrf_token():
+    response = session.get('http://udemy.com')
+    soup = BeautifulSoup(response.text)
+    return soup.findAll('input', {'name': 'csrf'})[0]['value']
+
 def login(username, password):
-    login_url = 'http://www.udemy.com/login/login-submit' # Yes, no SSL
-    payload = {'isSubmitted': 1, 'email': username, 'password': password, 'displayType': 'json'}
+    login_url = 'https://www.udemy.com/join/login-submit'
+    csrf_token = get_csrf_token()
+    payload = {'isSubmitted': 1, 'email': username, 'password': password, 'displayType': 'json', 'csrf': csrf_token}
     response = session.post(login_url, payload).json()
     if response.has_key('error'):
         print(response['error']['message'])
@@ -64,7 +71,7 @@ def get_video_links(course_id):
                                    'lecture_number': lecture_number, 
                                    'chapter_number': chapter_number})
             except KeyError:
-                print 'Cannot download lecture "%s" because it is not downloadable' %(lecture)
+                print('Cannot download lecture "%s" because it is not downloadable'%(lecture))
             lecture_number += 1
     return video_list
 
@@ -85,7 +92,7 @@ def get_video(directory, filename, link):
     if not os.path.exists(filename):
         urllib.urlretrieve(link, filename, reporthook = dl_progress)
     os.chdir('..')
-    print
+    print()
 
 def udemy_dl(username, password, course_link):
     login(username, password)
