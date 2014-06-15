@@ -29,7 +29,7 @@ class Session:
 session = Session()
 
 def get_csrf_token():
-    response = session.get('http://udemy.com')
+    response = session.get('https://www.udemy.com/join/login-popup')
     soup = BeautifulSoup(response.text)
     return soup.findAll('input', {'name': 'csrf'})[0]['value']
 
