@@ -92,6 +92,9 @@ def get_video_links(course_id):
             lecture_number += 1
     return video_list
 
+def sanitize_path(s):
+    return "".join([c for c in s if c.isalpha() or c.isdigit() or c in ' .-_,']).rstrip()
+
 def mkdir(directory) :
     if not os.path.exists(directory):
         os.makedirs(directory)
@@ -119,7 +122,9 @@ def udemy_dl(username, password, course_link):
     for video in get_video_links(course_id):
         directory = '%02d %s'%(video['chapter_number'], video['chapter'])
         filename = '%03d %s.mp4'%(video['lecture_number'], video['lecture'])
-        filename = filename.replace('/', '|') # Sanitize file name
+
+        directory = sanitize_path(directory)
+        filename = sanitize_path(filename)
 
         get_video(directory, filename, video['video_url'])
 
