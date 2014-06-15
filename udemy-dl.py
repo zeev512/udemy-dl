@@ -9,6 +9,7 @@ import re
 import os
 import time
 import urllib
+import json
 from BeautifulSoup import BeautifulSoup
 
 class Session:
@@ -47,8 +48,23 @@ def get_course_id(course_link):
     matches = re.search('data-courseId="(\d+)"', response.text)
     return matches.groups()[0]
 
+def parse_video_url(lecture_id):
+    '''A hacky way to find the json used to initalize the swf object player'''
+    embed_url = 'https://www.udemy.com/embed/{0}'.format(lecture_id)
+    html = session.get(embed_url).text
+
+    data = re.search(r'\$\("#player"\).jwplayer\((.*?)\);.*</script>', html, re.MULTILINE | re.DOTALL).group(1)
+    video = json.loads(data)
+
+    if 'playlist' in video and 'sources' in video['playlist'][0]:
+        source = video['playlist'][0]['sources'][0]
+        return source['file']
+    else:
+        return None
+
 def get_video_links(course_id):
-    course_data = session.get('http://www.udemy.com/api-1.0/courses/%s/curriculum?closeSessionWrites=1'%(course_id)).json()
+    course_url = 'https://www.udemy.com/api-1.1/courses/{0}/curriculum?fields[lecture]=@min,completionRatio,progressStatus&fields[quiz]=@min,completionRatio'.format(course_id)
+    course_data = session.get(course_url).json()
 
     chapter = None
     video_list = []
@@ -61,17 +77,18 @@ def get_video_links(course_id):
             chapter = item['title']
             chapter_number += 1
             lecture_number = 1
-        elif item['__class'] == 'lecture' and item['asset_type'] == 'Video':
+        elif item['__class'] == 'lecture' and item['assetType'] == 'Video':
             lecture = item['title']
             try:
-                video_url = item['asset']['download_url']['video'][0]
-                video_list.append({'chapter': chapter, 
-                                   'lecture': lecture, 
+                lecture_id = item['id']
+                video_url = parse_video_url(lecture_id)
+                video_list.append({'chapter': chapter,
+                                   'lecture': lecture,
                                    'video_url': video_url,
-                                   'lecture_number': lecture_number, 
+                                   'lecture_number': lecture_number,
                                    'chapter_number': chapter_number})
-            except KeyError:
-                print('Cannot download lecture "%s" because it is not downloadable'%(lecture))
+            except:
+                print('Cannot download lecture "%s"'%(lecture))
             lecture_number += 1
     return video_list
 
