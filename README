@@ -1,13 +1,17 @@
 A script to download lecture videos for a udemy course.
 
+### Install
+
 Install pip (python requirements manager)
-sudo curl https://bootstrap.pypa.io/get-pip.py | python
+
+    sudo curl https://bootstrap.pypa.io/get-pip.py | python
 
 Install dependencies
-pip install -r requirements.txt
 
-Usage:
-python udemy-dl.py -u email udemy_course_link
+    pip install -r requirements.txt
 
+### Use
 
-Then you will be prompted with for your udemy password.
+    python udemy-dl.py -u email udemy_course_link
+
+Then you will be prompted for your udemy password.
