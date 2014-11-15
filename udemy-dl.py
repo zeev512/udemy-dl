@@ -9,10 +9,11 @@ import re
 import os
 import json
 from bs4 import BeautifulSoup
+
 try:
-    from urllib import urlretrieve
-except:
-    from urllib.request import urlretrieve
+    from urllib import urlretrieve  # Python 2
+except ImportError:
+    from urllib.request import urlretrieve  # Python 3
 
 
 class Session:
@@ -170,12 +171,16 @@ def main():
     link = args['link']
 
     if not username:
-        print('Username/Email:'),
-        username = raw_input()
+        try:
+            username = raw_input("Username/Email: ")  # Python 2
+        except NameError:
+            username = input("Username/Email: ")  # Python 3
+
     if not password:
         password = getpass.getpass(prompt='Password: ')
 
     udemy_dl(username, password, link)
+
 
 if __name__ == '__main__':
     main()
