@@ -16,12 +16,17 @@ except:
 
 
 class Session:
-    headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:18.0) Gecko/20100101 Firefox/18.0',
+    headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:18.0) Gecko/20100101 Firefox/32.0',
                'X-Requested-With': 'XMLHttpRequest',
+               'Host': 'www.udemy.com',
                'Referer': '	http://www.udemy.com/'}
 
     def __init__(self):
         self.session = requests.Session()
+
+    def set_auth_headers(self, access_token, client_id):
+        self.headers['X-Udemy-Bearer-Token'] = access_token
+        self.headers['X-Udemy-Client-Id'] = client_id
 
     def get(self, url):
         return self.session.get(url, headers=self.headers)
@@ -44,7 +49,13 @@ def login(username, password):
     csrf_token = get_csrf_token()
     payload = {'isSubmitted': 1, 'email': username, 'password': password,
                'displayType': 'json', 'csrf': csrf_token}
-    response = session.post(login_url, payload).json()
+    response = session.post(login_url, payload)
+
+    access_token = response.cookies.get('access_token')
+    client_id = response.cookies.get('client_id')
+    session.set_auth_headers(access_token, client_id)
+
+    response = response.json()
     if 'error' in response:
         print(response['error']['message'])
         sys.exit(1)
