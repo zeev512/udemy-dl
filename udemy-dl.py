@@ -68,7 +68,7 @@ def get_course_id(course_link):
     return matches.groups()[0]
 
 
-def parse_video_url(lecture_id):
+def parse_video_url(lecture_id, hd=False):
     '''A hacky way to find the json used to initalize the swf object player'''
     embed_url = 'https://www.udemy.com/embed/{0}'.format(lecture_id)
     html = session.get(embed_url).text
@@ -78,13 +78,20 @@ def parse_video_url(lecture_id):
     video = json.loads(data)
 
     if 'playlist' in video and 'sources' in video['playlist'][0]:
+        if hd:
+            for source in video['playlist'][0]['sources']:
+                if '720' in source['label'] or 'HD' in source['label']:
+                    return source['file']
+
+        # The 360p case and fallback if no HD version
         source = video['playlist'][0]['sources'][0]
         return source['file']
     else:
+        print("Failed to parse video url")
         return None
 
 
-def get_video_links(course_id):
+def get_video_links(course_id, hd=False):
     course_url = 'https://www.udemy.com/api-1.1/courses/{0}/curriculum?fields[lecture]=@min,completionRatio,progressStatus&fields[quiz]=@min,completionRatio'.format(course_id)
     course_data = session.get(course_url).json()
 
@@ -103,7 +110,7 @@ def get_video_links(course_id):
             lecture = item['title']
             try:
                 lecture_id = item['id']
-                video_url = parse_video_url(lecture_id)
+                video_url = parse_video_url(lecture_id, hd)
                 video_list.append({'chapter': chapter,
                                    'lecture': lecture,
                                    'video_url': video_url,
@@ -146,7 +153,7 @@ def udemy_dl(username, password, course_link):
 
     course_id = get_course_id(course_link)
 
-    for video in get_video_links(course_id):
+    for video in get_video_links(course_id, hd=True):
         directory = '%02d %s' % (video['chapter_number'], video['chapter'])
         filename = '%03d %s.mp4' % (video['lecture_number'], video['lecture'])
 
