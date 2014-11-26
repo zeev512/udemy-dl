@@ -140,11 +140,12 @@ def dl_progress(num_blocks, block_size, total_size):
 
 def get_video(directory, filename, link):
     print('Downloading %s  ' % (filename)),
+    previous_dir = os.getcwd()
     mkdir(directory)
     os.chdir(directory)
     if not os.path.exists(filename):
         urlretrieve(link, filename, reporthook=dl_progress)
-    os.chdir('..')
+    os.chdir(previous_dir)
     print()
 
 
