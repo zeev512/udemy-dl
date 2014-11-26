@@ -148,16 +148,19 @@ def get_video(directory, filename, link):
     print()
 
 
-def udemy_dl(username, password, course_link):
+def udemy_dl(username, password, course_link, dest_dir=""):
     login(username, password)
 
     course_id = get_course_id(course_link)
 
     for video in get_video_links(course_id, hd=True):
         directory = '%02d %s' % (video['chapter_number'], video['chapter'])
-        filename = '%03d %s.mp4' % (video['lecture_number'], video['lecture'])
-
         directory = sanitize_path(directory)
+
+        if dest_dir:
+            directory = os.path.join(dest_dir, directory)
+
+        filename = '%03d %s.mp4' % (video['lecture_number'], video['lecture'])
         filename = sanitize_path(filename)
 
         get_video(directory, filename, video['video_url'])
@@ -170,12 +173,20 @@ def main():
     parser.add_argument('link', help='Link for udemy course', action='store')
     parser.add_argument('-u', '--username', help='Username/Email', default=None, action='store')
     parser.add_argument('-p', '--password', help='Password', default=None, action='store')
+    parser.add_argument('-o', '--output-dir', help='Output directory', default=None, action='store')
 
     args = vars(parser.parse_args())
 
     username = args['username']
     password = args['password']
-    link = args['link']
+    link = args['link'].rstrip('/')
+
+    if args['output_dir']:
+        # Normalize the output path if specified
+        output_dir = os.path.normpath( args['output_dir'] )
+    else:
+        # Get output dir name from the URL
+        output_dir = os.path.join( ".", link.rsplit('/', 1)[1] )
 
     if not username:
         try:
@@ -186,7 +197,9 @@ def main():
     if not password:
         password = getpass.getpass(prompt='Password: ')
 
-    udemy_dl(username, password, link)
+    print('Downloading to: %s\n' % (os.path.abspath(output_dir)) )
+
+    udemy_dl(username, password, link, output_dir)
 
 
 if __name__ == '__main__':
