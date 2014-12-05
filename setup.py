@@ -2,7 +2,10 @@
 
 import os
 import subprocess
-from distutils.core import setup
+try:
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
 
 requirements = [pkg.split('=')[0] for pkg in open('requirements.txt').readlines()]
 
