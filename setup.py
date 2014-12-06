@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 
+import os
 import subprocess
-from distutils.core import setup
+try:
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
 
 requirements = [pkg.split('=')[0] for pkg in open('requirements.txt').readlines()]
 
@@ -20,6 +24,10 @@ classifiers = ['Environment :: Console',
                ]
 
 version = open('CHANGES.txt').readlines()[0][1:].strip()
+
+# if installed as root or with sudo, set permission mask to allow read/exec for all users
+if os.getuid() == 0:
+    os.umask(int('022', 8))
 
 setup(name='udemy-dl',
       version=version,
