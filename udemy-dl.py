@@ -64,8 +64,8 @@ def login(username, password):
 
 def get_course_id(course_link):
     response = session.get(course_link)
-    matches = re.search('data-courseId="(\d+)"', response.text)
-    return matches.groups()[0]
+    matches = re.search('data-courseid="(\d+)"', response.text, re.IGNORECASE)
+    return matches.groups()[0] if matches else None
 
 
 def parse_video_url(lecture_id, hd=False):
@@ -152,6 +152,9 @@ def udemy_dl(username, password, course_link, dest_dir=""):
     login(username, password)
 
     course_id = get_course_id(course_link)
+    if not course_id:
+        print('Failed to get course ID')
+        return
 
     for video in get_video_links(course_id, hd=True):
         directory = '%02d %s' % (video['chapter_number'], video['chapter'])
