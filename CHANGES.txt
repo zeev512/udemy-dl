@@ -1,2 +1,6 @@
-- 0.1
+- 0.1.1
+* Fix permissions on root user install
+* Fix for detecting course id properly
+* Prefer setuptools to distutils
+- 0.1.0
 * Initial release for upload on PyPi
