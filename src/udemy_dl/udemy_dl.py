@@ -8,6 +8,7 @@ import sys
 import re
 import os
 import json
+import subprocess
 from bs4 import BeautifulSoup
 
 try:
@@ -143,11 +144,19 @@ def get_video(directory, filename, link):
     previous_dir = os.getcwd()
     mkdir(directory)
     os.chdir(directory)
-    if not os.path.exists(filename):
-        urlretrieve(link, filename, reporthook=dl_progress)
+    try:
+        curl_dl(link, filename)
+    except OSError:
+        if not os.path.exists(filename):
+            urlretrieve(link, filename, reporthook=dl_progress)
+        else:
+            print('Skipping this lecture because an existing file already exists')
     os.chdir(previous_dir)
-    print()
+    print('\n'),
 
+def curl_dl(link, filename):
+    command = ['curl', '-C', '-', link, '-o', filename]
+    subprocess.call(command)
 
 def udemy_dl(username, password, course_link, dest_dir=""):
     login(username, password)
