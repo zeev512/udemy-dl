@@ -26,8 +26,11 @@ classifiers = ['Environment :: Console',
 version = open('CHANGES.txt').readlines()[0][1:].strip()
 
 # if installed as root or with sudo, set permission mask to allow read/exec for all users
-if os.getuid() == 0:
-    os.umask(int('022', 8))
+try:
+    if os.getuid() == 0:
+        os.umask(int('022', 8))
+except AttributeError:
+    pass
 
 setup(name='udemy-dl',
       version=version,
