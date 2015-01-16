@@ -155,7 +155,7 @@ def get_video(directory, filename, link):
     print('\n'),
 
 def curl_dl(link, filename):
-    command = ['curl', '-C', '-', link, '-o', filename]
+    command = ['curl', '-C', '-', link, '-o', filename ,'--insecure']
     subprocess.call(command)
 
 def udemy_dl(username, password, course_link, dest_dir=""):
