@@ -140,7 +140,7 @@ def dl_progress(num_blocks, block_size, total_size):
 
 
 def get_video(directory, filename, link):
-    print('Downloading %s  ' % (filename))
+    print('Downloading %s  ' % (filename.encode('utf-8')))
     previous_dir = os.getcwd()
     mkdir(directory)
     os.chdir(directory)
