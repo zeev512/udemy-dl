@@ -92,7 +92,7 @@ def parse_video_url(lecture_id, hd=False):
         return None
 
 
-def get_video_links(course_id, hd=False):
+def get_video_links(course_id, chapter_start, chapter_end, lecture_start, lecture_end, hd=False):
     course_url = 'https://www.udemy.com/api-1.1/courses/{0}/curriculum?fields[lecture]=@min,completionRatio,progressStatus&fields[quiz]=@min,completionRatio'.format(course_id)
     course_data = session.get(course_url).json()
 
@@ -109,18 +109,26 @@ def get_video_links(course_id, hd=False):
             lecture_number = 1
         elif item['__class'] == 'lecture' and item['assetType'] == 'Video':
             lecture = item['title']
-            try:
-                lecture_id = item['id']
-                video_url = parse_video_url(lecture_id, hd)
-                video_list.append({'chapter': chapter,
-                                   'lecture': lecture,
-                                   'video_url': video_url,
-                                   'lecture_number': lecture_number,
-                                   'chapter_number': chapter_number})
-            except:
-                print('Cannot download lecture "%s"' % (lecture))
+            if valid_lecture(chapter_number, lecture_number, chapter_start, chapter_end, lecture_start, lecture_end):
+                try:
+                    lecture_id = item['id']
+                    video_url = parse_video_url(lecture_id, hd)
+                    video_list.append({'chapter': chapter,
+                                      'lecture': lecture,
+                                      'video_url': video_url,
+                                      'lecture_number': lecture_number,
+                                      'chapter_number': chapter_number})
+                except:
+                    print('Cannot download lecture "%s"' % (lecture))
             lecture_number += 1
     return video_list
+
+def valid_lecture(chapter_number, lecture_number, chapter_start, chapter_end, lecture_start, lecture_end):
+    if (chapter_start is not None) and (chapter_number<chapter_start or (chapter_number== chapter_start and lecture_start is not None and lecture_number < lecture_start)):
+        return False
+    if (chapter_end is not None) and (chapter_number>chapter_end or (chapter_number== chapter_end and lecture_end is not None and lecture_number > lecture_end)):
+        return False
+    return True
 
 
 def sanitize_path(s):
@@ -158,7 +166,7 @@ def curl_dl(link, filename):
     command = ['curl', '-C', '-', link, '-o', filename ,'--insecure']
     subprocess.call(command)
 
-def udemy_dl(username, password, course_link, dest_dir=""):
+def udemy_dl(username, password, course_link, chapter_start, chapter_end, lecture_start, lecture_end, dest_dir=""):
     login(username, password)
 
     course_id = get_course_id(course_link)
@@ -166,7 +174,7 @@ def udemy_dl(username, password, course_link, dest_dir=""):
         print('Failed to get course ID')
         return
 
-    for video in get_video_links(course_id, hd=True):
+    for video in get_video_links(course_id, chapter_start, chapter_end, lecture_start, lecture_end, hd=True):
         directory = '%02d %s' % (video['chapter_number'], video['chapter'])
         directory = sanitize_path(directory)
 
@@ -181,11 +189,22 @@ def udemy_dl(username, password, course_link, dest_dir=""):
     session.get('http://www.udemy.com/user/logout')
 
 
+def is_integer(p):
+    try:
+        int(p)
+        return True
+    except ValueError:
+        return False
+
 def main():
     parser = argparse.ArgumentParser(description='Fetch all the videos for a udemy course')
     parser.add_argument('link', help='Link for udemy course', action='store')
     parser.add_argument('-u', '--username', help='Username/Email', default=None, action='store')
     parser.add_argument('-p', '--password', help='Password', default=None, action='store')
+    parser.add_argument('--chapter-start', help='Chapter to start at (default is 1); can be combined with --lecture-start to select specific lecture to start at', default=None, action='store')
+    parser.add_argument('--chapter-end', help='Chapter to end at (default is last); can be combined with --lecture-end to select specific lecture to end at', default=None, action='store')
+    parser.add_argument('--lecture-start', help='Lecture to start at (default is 1); must be used with --chapter-start', default=None, action='store')
+    parser.add_argument('--lecture-end', help='Lecture to end at (default is last); must be used with --chapter-end', default=None, action='store')
     parser.add_argument('-o', '--output-dir', help='Output directory', default=None, action='store')
 
     args = vars(parser.parse_args())
@@ -193,7 +212,45 @@ def main():
     username = args['username']
     password = args['password']
     link = args['link'].rstrip('/')
+    lecture_start = args['lecture_start'];
+    lecture_end = args['lecture_end'];
+    chapter_start = args['chapter_start'];
+    chapter_end = args['chapter_end'];
 
+    if chapter_start is not None:
+        if not is_integer(chapter_start) or int(chapter_start) <=0:
+            print('--chapter_start requires natural number argument')
+            sys.exit()
+        chapter_start = int(chapter_start)
+    if chapter_end is not None:
+        if not is_integer(chapter_end) or int(chapter_end) <=0:
+            print('--chapter_end requires natural number argument')
+            sys.exit()
+        chapter_end = int(chapter_end)
+        if chapter_start is not None and (chapter_start > chapter_end):
+            print('--chapter-start cannot be after --chapter-end')
+            sys.exit()
+
+    if lecture_start is not None and chapter_start is None:
+        print('--lecture-start argument requires --chapter-start')
+        sys.exit()
+    if lecture_end is not None and  chapter_end is None:
+        print('--lecture-end argument requires --chapter-end')
+        sys.exit()
+    if lecture_start is not None:
+        if not is_integer(lecture_start) or int(lecture_start) <=0:
+            print('--lecture_start requires natural number argument')
+            sys.exit()
+        lecture_start = int(lecture_start)
+    if lecture_end is not None:
+        if not is_integer(lecture_end) or int(lecture_end) <=0:
+            print('--lecture_end requires natural number argument')
+            sys.exit()
+        lecture_end = int(lecture_end)
+        if lecture_start is not None and (chapter_start == chapter_end and lecture_start > lecture_end):
+            print('--lecture-start cannot be after --lecture-end in same chapter')
+            sys.exit()
+    
     if args['output_dir']:
         # Normalize the output path if specified
         output_dir = os.path.normpath( args['output_dir'] )
@@ -212,7 +269,7 @@ def main():
 
     print('Downloading to: %s\n' % (os.path.abspath(output_dir)) )
 
-    udemy_dl(username, password, link, output_dir)
+    udemy_dl(username, password, link, chapter_start, chapter_end, lecture_start, lecture_end, output_dir)
 
 
 if __name__ == '__main__':
