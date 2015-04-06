@@ -4,26 +4,18 @@ import wget
 import subprocess
 import requests
 
-try:
-    from urllib import urlretrieve  # Python 2
-except ImportError:
-    from urllib.request import urlretrieve  # Python 3
-
-
 def download(link, filename):
     try:
         curl_dl(link, filename)
     except OSError:
-        wget.download(link, filename)
-
-    if not os.path.exists(filename):
-        urlretrieve(link, filename, reporthook=dl_progress)
-    else:
-        raise Exception('Failed to download this lecture')
+        if not os.path.exists(filename):
+            wget.download(link, filename)
+        else:
+            raise Exception('Failed to download this lecture')
 
 
 def curl_dl(link, filename):
-    command = ['curl', '-C', '-', link, '-o', filename ,'--insecure']
+    command = ['curl', '-C', '-', link, '-o', filename,'--insecure']
 
     cert_path = requests.certs.where()
     if cert_path:
