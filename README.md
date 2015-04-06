@@ -4,7 +4,7 @@ A Python script to download lecture videos for a udemy.com course.
 
 * Python (2 or 3)
 * `pip` (Python Install Packager)
-* Python modules `beautifulsoup4` and `requests`
+* Python module `requests`
   * If missing, they will be automatically installed by `pip`
 
 
@@ -48,4 +48,4 @@ For information about all available parameters, use the `--help` parameter
 
     sudo pip uninstall udemy-dl
 
-You may uninstall the required `beautifulsoup4` and `requests` modules too but be aware that those might be required for other Python modules.
+You may uninstall the required `requests` module too but be aware that those might be required for other Python modules.
