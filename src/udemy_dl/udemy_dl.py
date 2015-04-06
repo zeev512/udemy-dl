@@ -8,7 +8,6 @@ import sys
 import re
 import os
 import json
-from bs4 import BeautifulSoup
 from download import download
 
 
@@ -37,9 +36,8 @@ session = Session()
 
 def get_csrf_token():
     response = session.get('https://www.udemy.com/join/login-popup')
-    soup = BeautifulSoup(response.text)
-    return soup.find_all('input', {'name': 'csrf'})[0]['value']
-
+    match = re.search('name="csrf" value="(.*)"', response.text)
+    return match.group(1)
 
 def login(username, password):
     login_url = 'https://www.udemy.com/join/login-submit'
