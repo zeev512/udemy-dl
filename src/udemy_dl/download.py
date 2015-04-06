@@ -4,14 +4,20 @@ import wget
 import subprocess
 import requests
 
+class DLException(Exception):
+    pass
+
 def download(link, filename):
-    try:
-        curl_dl(link, filename)
-    except OSError:
-        if not os.path.exists(filename):
-            wget.download(link, filename)
-        else:
-            raise Exception('Failed to download this lecture')
+    if 'youtube.com' in link:
+        youtube_dl(link, filename)
+    else:
+        try:
+            curl_dl(link, filename)
+        except OSError:
+            if not os.path.exists(filename):
+                wget.download(link, filename)
+            else:
+                raise DLException('Failed to download this lecture')
 
 
 def curl_dl(link, filename):
@@ -28,3 +34,11 @@ def dl_progress(num_blocks, block_size, total_size):
     if num_blocks != 0:
         sys.stdout.write(4 * '\b')
     sys.stdout.write('%3d%%' % (progress))
+
+
+def youtube_dl(link, filename):
+    try:
+        subprocess.call(['youtube-dl', '-o', filename, link])
+    except OSError:
+        raise DLException('Install youtube-dl to download this lecture')
+

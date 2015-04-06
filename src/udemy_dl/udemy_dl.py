@@ -8,7 +8,7 @@ import sys
 import re
 import os
 import json
-from download import download
+from download import download, DLException
 
 
 class Session:
@@ -130,7 +130,10 @@ def get_video(directory, filename, link):
     previous_dir = os.getcwd()
     mkdir(directory)
     os.chdir(directory)
-    download(link, filename)
+    try:
+        download(link, filename)
+    except DLException as e:
+        print('Couldn\'t download this lecture: {0}'.format(e))
     os.chdir(previous_dir)
     print('\n'),
 
