@@ -8,7 +8,7 @@ import sys
 import re
 import os
 import json
-from download import download, DLException
+from .download import download, DLException
 
 
 class Session:
