@@ -2,6 +2,7 @@
 # -*- coding: utf8 -*-
 
 import requests
+import requests.sessions
 import argparse
 import getpass
 import sys
@@ -18,8 +19,8 @@ class Session:
                'Referer': '	http://www.udemy.com/'}
 
     def __init__(self):
-        self.session = requests.Session()
-
+        self.session = requests.sessions.Session()
+        
     def set_auth_headers(self, access_token, client_id):
         self.headers['X-Udemy-Bearer-Token'] = access_token
         self.headers['X-Udemy-Client-Id'] = client_id
