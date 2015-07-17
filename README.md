@@ -1,5 +1,7 @@
 A Python script to download lecture videos for a udemy.com course.
 
+[![PyPI version](https://badge.fury.io/py/udemy-dl.svg)](http://badge.fury.io/py/udemy-dl)
+
 ### Prerequisites
 
 * Python (2 or 3)
