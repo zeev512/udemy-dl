@@ -86,35 +86,44 @@ def parse_video_url(lecture_id, hd=False):
         return None
 
 
-def get_video_links(course_id, hd=False):
+def get_video_links(course_id, lecture_start, lecture_end, hd=False):
     course_url = 'https://www.udemy.com/api-1.1/courses/{0}/curriculum?fields[lecture]=@min,completionRatio,progressStatus&fields[quiz]=@min,completionRatio'.format(course_id)
     course_data = session.get(course_url).json()
 
     chapter = None
     video_list = []
 
-    lecture_number = 0
+    lecture_number = 1
     chapter_number = 0
     # A udemy course has chapters, each having one or more lectures
     for item in course_data:
         if item['__class'] == 'chapter':
             chapter = item['title']
             chapter_number += 1
-            lecture_number = 1
         elif item['__class'] == 'lecture' and item['assetType'] == 'Video':
             lecture = item['title']
-            try:
-                lecture_id = item['id']
-                video_url = parse_video_url(lecture_id, hd)
-                video_list.append({'chapter': chapter,
-                                   'lecture': lecture,
-                                   'video_url': video_url,
-                                   'lecture_number': lecture_number,
-                                   'chapter_number': chapter_number})
-            except:
-                print('Cannot download lecture "%s"' % (lecture))
+            if valid_lecture(lecture_number, lecture_start, lecture_end):
+                try:
+                    lecture_id = item['id']
+                    video_url = parse_video_url(lecture_id, hd)
+                    video_list.append({'chapter': chapter,
+                                       'lecture': lecture,
+                                       'video_url': video_url,
+                                       'lecture_number': lecture_number,
+                                       'chapter_number': chapter_number})
+                except:
+                    print('Cannot download lecture "%s"' % (lecture))
             lecture_number += 1
     return video_list
+
+
+def valid_lecture(lecture_number, lecture_start, lecture_end):
+    if lecture_start and lecture_end:
+        return lecture_start <= lecture_number <= lecture_end
+    elif lecture_start:
+        return lecture_start <= lecture_number
+    else:
+        return lecture_number <= lecture_end
 
 
 def sanitize_path(s):
@@ -138,7 +147,7 @@ def get_video(directory, filename, link):
     os.chdir(previous_dir)
     print('\n'),
 
-def udemy_dl(username, password, course_link, dest_dir=""):
+def udemy_dl(username, password, course_link, lecture_start, lecture_end, dest_dir=""):
     login(username, password)
 
     course_id = get_course_id(course_link)
@@ -146,7 +155,7 @@ def udemy_dl(username, password, course_link, dest_dir=""):
         print('Failed to get course ID')
         return
 
-    for video in get_video_links(course_id, hd=True):
+    for video in get_video_links(course_id, lecture_start, lecture_end, hd=True):
         directory = '%02d %s' % (video['chapter_number'], video['chapter'])
         directory = sanitize_path(directory)
 
@@ -161,11 +170,20 @@ def udemy_dl(username, password, course_link, dest_dir=""):
     session.get('http://www.udemy.com/user/logout')
 
 
+def is_integer(p):
+    try:
+        int(p)
+        return True
+    except ValueError:
+        return False
+
 def main():
     parser = argparse.ArgumentParser(description='Fetch all the videos for a udemy course')
     parser.add_argument('link', help='Link for udemy course', action='store')
     parser.add_argument('-u', '--username', help='Username/Email', default=None, action='store')
     parser.add_argument('-p', '--password', help='Password', default=None, action='store')
+    parser.add_argument('--lecture-start', help='Lecture to start at (default is 1)', default=1, action='store')
+    parser.add_argument('--lecture-end', help='Lecture to end at (default is last)', default=None, action='store')
     parser.add_argument('-o', '--output-dir', help='Output directory', default=None, action='store')
 
     args = vars(parser.parse_args())
@@ -173,13 +191,26 @@ def main():
     username = args['username']
     password = args['password']
     link = args['link'].rstrip('/')
+    lecture_start = args['lecture_start']
+    lecture_end = args['lecture_end']
 
+    if lecture_start is not None:
+        if not is_integer(lecture_start) or int(lecture_start) <= 0:
+            print('--lecture_start requires natural number argument')
+            sys.exit(1)
+        lecture_start = int(lecture_start)
+    if lecture_end is not None:
+        if not is_integer(lecture_end) or int(lecture_end) <= 0:
+            print('--lecture_end requires natural number argument')
+            sys.exit(1)
+        lecture_end = int(lecture_end)
+    
     if args['output_dir']:
         # Normalize the output path if specified
-        output_dir = os.path.normpath( args['output_dir'] )
+        output_dir = os.path.normpath(args['output_dir'])
     else:
         # Get output dir name from the URL
-        output_dir = os.path.join( ".", link.rsplit('/', 1)[1] )
+        output_dir = os.path.join(".", link.rsplit('/', 1)[1])
 
     if not username:
         try:
@@ -190,9 +221,9 @@ def main():
     if not password:
         password = getpass.getpass(prompt='Password: ')
 
-    print('Downloading to: %s\n' % (os.path.abspath(output_dir)) )
+    print('Downloading to: %s\n' % (os.path.abspath(output_dir)))
 
-    udemy_dl(username, password, link, output_dir)
+    udemy_dl(username, password, link, lecture_start, lecture_end, output_dir)
 
 
 if __name__ == '__main__':
