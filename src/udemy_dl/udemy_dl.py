@@ -13,10 +13,10 @@ from .download import download, DLException
 
 
 class Session:
-    headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:18.0) Gecko/20100101 Firefox/32.0',
+    headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:39.0) Gecko/20100101 Firefox/39.0',
                'X-Requested-With': 'XMLHttpRequest',
                'Host': 'www.udemy.com',
-               'Referer': '	http://www.udemy.com/'}
+               'Referer': 'https://www.udemy.com/join/login-popup'}
 
     def __init__(self):
         self.session = requests.sessions.Session()
@@ -37,23 +37,25 @@ session = Session()
 
 def get_csrf_token():
     response = session.get('https://www.udemy.com/join/login-popup')
-    match = re.search('name="csrf" value="(.*)"', response.text)
+    match = re.search("name=\'csrfmiddlewaretoken\' value=\'(.*)\'", response.text)
     return match.group(1)
 
 def login(username, password):
-    login_url = 'https://www.udemy.com/join/login-submit'
+    locale = 'en_US'
+    login_url = 'https://www.udemy.com/join/login-popup'
     csrf_token = get_csrf_token()
     payload = {'isSubmitted': 1, 'email': username, 'password': password,
-               'displayType': 'json', 'csrf': csrf_token}
+               'displayType': 'json', 'csrfmiddlewaretoken': csrf_token, 'locale': locale, 'DEBUG':True }
+    session.headers.update({'referer': 'https://www.udemy.com/join/login-popup'})
     response = session.post(login_url, payload)
 
     access_token = response.cookies.get('access_token')
     client_id = response.cookies.get('client_id')
     session.set_auth_headers(access_token, client_id)
 
-    response = response.json()
+    response = response.text
     if 'error' in response:
-        print(response['error']['message'])
+        print(response)
         sys.exit(1)
 
 
