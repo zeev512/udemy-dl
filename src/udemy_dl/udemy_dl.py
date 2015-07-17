@@ -41,12 +41,10 @@ def get_csrf_token():
     return match.group(1)
 
 def login(username, password):
-    locale = 'en_US'
-    login_url = 'https://www.udemy.com/join/login-popup'
+    login_url = 'https://www.udemy.com/join/login-popup/?displayType=ajax&display_type=popup&showSkipButton=1&returnUrlAfterLogin=https%3A%2F%2Fwww.udemy.com%2F&next=https%3A%2F%2Fwww.udemy.com%2F&locale=en_US'
     csrf_token = get_csrf_token()
     payload = {'isSubmitted': 1, 'email': username, 'password': password,
-               'displayType': 'json', 'csrfmiddlewaretoken': csrf_token, 'locale': locale, 'DEBUG':True }
-    session.headers.update({'referer': 'https://www.udemy.com/join/login-popup'})
+               'displayType': 'ajax', 'csrfmiddlewaretoken': csrf_token}
     response = session.post(login_url, payload)
 
     access_token = response.cookies.get('access_token')
