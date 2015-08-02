@@ -10,7 +10,7 @@ import re
 import os
 import json
 from .download import download, DLException
-from _version import __version__
+from ._version import __version__
 
 
 
