@@ -10,6 +10,8 @@ import re
 import os
 import json
 from .download import download, DLException
+from ._version import __version__
+
 
 
 class Session:
@@ -185,6 +187,7 @@ def main():
     parser.add_argument('--lecture-start', help='Lecture to start at (default is 1)', default=1, action='store')
     parser.add_argument('--lecture-end', help='Lecture to end at (default is last)', default=None, action='store')
     parser.add_argument('-o', '--output-dir', help='Output directory', default=None, action='store')
+    parser.add_argument('-v', '--version', help='Display the version of udemy-dl and exit', action='version', version='%(prog)s {version}'.format(version=__version__))
 
     args = vars(parser.parse_args())
 
