@@ -24,7 +24,7 @@ Easy install (if you trust them) is to run their bootstrap installer directly by
 
     sudo pip install udemy-dl
 
-
+If you are using windows please rename :C:\Python34\Scripts\udemy-dl to C:\Python34\Scripts\udemy-dl.py and add C:\Python34\Scripts\ to system environments
 ### Usage
 
 Simply call `udemy-dl` with the full URL to the course page.
@@ -51,3 +51,4 @@ For information about all available parameters, use the `--help` parameter
     sudo pip uninstall udemy-dl
 
 You may uninstall the required `requests` module too but be aware that those might be required for other Python modules.
+
