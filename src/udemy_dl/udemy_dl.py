@@ -18,7 +18,7 @@ class Session:
     headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:39.0) Gecko/20100101 Firefox/39.0',
                'X-Requested-With': 'XMLHttpRequest',
                'Host': 'www.udemy.com',
-               'Referer': 'https://www.udemy.com/join/login-popup'}
+               'Referer': 'https://www.ucl.udemy.com/join/login-popup'}
 
     def __init__(self):
         self.session = requests.sessions.Session()
@@ -38,12 +38,12 @@ session = Session()
 
 
 def get_csrf_token():
-    response = session.get('https://www.udemy.com/join/login-popup')
+    response = session.get('https://www.ucl.udemy.com/join/login-popup')
     match = re.search("name=\'csrfmiddlewaretoken\' value=\'(.*)\'", response.text)
     return match.group(1)
 
 def login(username, password):
-    login_url = 'https://www.udemy.com/join/login-popup/?displayType=ajax&display_type=popup&showSkipButton=1&returnUrlAfterLogin=https%3A%2F%2Fwww.udemy.com%2F&next=https%3A%2F%2Fwww.udemy.com%2F&locale=en_US'
+    login_url = 'https://www.ucl.udemy.com/join/login-popup/?displayType=ajax&display_type=popup&showSkipButton=1&returnUrlAfterLogin=https%3A%2F%2Fwww.udemy.com%2F&next=https%3A%2F%2Fwww.udemy.com%2F&locale=en_US'
     csrf_token = get_csrf_token()
     payload = {'isSubmitted': 1, 'email': username, 'password': password,
                'displayType': 'ajax', 'csrfmiddlewaretoken': csrf_token}
@@ -67,7 +67,7 @@ def get_course_id(course_link):
 
 def parse_video_url(lecture_id, hd=False):
     '''A hacky way to find the json used to initalize the swf object player'''
-    embed_url = 'https://www.udemy.com/embed/{0}'.format(lecture_id)
+    embed_url = 'https://www.ucl.udemy.com/embed/{0}'.format(lecture_id)
     html = session.get(embed_url).text
 
     data = re.search(r'\$\("#player"\).jwplayer\((.*?)\);.*</script>', html,
@@ -89,7 +89,7 @@ def parse_video_url(lecture_id, hd=False):
 
 
 def get_video_links(course_id, lecture_start, lecture_end, hd=False):
-    course_url = 'https://www.udemy.com/api-1.1/courses/{0}/curriculum?fields[lecture]=@min,completionRatio,progressStatus&fields[quiz]=@min,completionRatio'.format(course_id)
+    course_url = 'https://www.ucl.udemy.com/api-1.1/courses/{0}/curriculum?fields[lecture]=@min,completionRatio,progressStatus&fields[quiz]=@min,completionRatio'.format(course_id)
     course_data = session.get(course_url).json()
 
     chapter = None
@@ -169,7 +169,7 @@ def udemy_dl(username, password, course_link, lecture_start, lecture_end, dest_d
 
         get_video(directory, filename, video['video_url'])
 
-    session.get('http://www.udemy.com/user/logout')
+    session.get('http://www.ucl.udemy.com/user/logout')
 
 
 def is_integer(p):
